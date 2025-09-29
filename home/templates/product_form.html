@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+{% block title %}Product Form{% endblock %}
+{% load static %}
+{% block content %}
+
+<style>
+.text-gradient {
+    background: linear-gradient(45deg,#ff416c,#ff4b2b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.product-form-card {
+    max-width: 600px;
+    margin: 0 auto;
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px rgba(60,0,100,0.15);
+    background: #fff;
+}
+.btn-success {
+    background: linear-gradient(45deg,#ff416c,#ff4b2b)!important;
+    border: none;
+}
+.image-preview {
+    max-width: 100px;
+    max-height: 100px;
+    margin: 5px;
+    border-radius: 8px;
+}
+.existing-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+</style>
+
+<section class="ftco-section">
+  <div class="container">
+    <h2 class="fw-bold text-gradient text-center mb-4">
+      <i class="fa fa-box-open me-2"></i>
+      {% if product %}Edit{% else %}Add{% endif %} Product
+    </h2>
+    <div class="product-form-card p-4">
+      <form method="POST" enctype="multipart/form-data" id="productForm">
+        {% csrf_token %}
+        
+        <!-- Product Name -->
+        <div class="mb-3">
+          <label class="form-label fw-bold">Product Name</label>
+          <input type="text" class="form-control" name="pname" placeholder="Enter product name"
+            value="{% if product %}{{ product.name }}{% endif %}" required>
+        </div>
+
+        <!-- Product Price -->
+        <div class="mb-3">
+          <label class="form-label fw-bold">Product Price (₹)</label>
+          <input type="number" class="form-control" name="price" placeholder="Enter price"
+            value="{% if product %}{{ product.price }}{% endif %}" required min="0" step="0.01">
+        </div>
+
+        <!-- Product Stock -->
+        <div class="mb-3">
+          <label class="form-label fw-bold">Product Stock</label>
+          <input type="number" class="form-control" name="stock" placeholder="Enter stock quantity"
+            value="{% if product %}{{ product.stock }}{% endif %}" required min="0">
+        </div>
+
+        <!-- Category Selection -->
+        <div class="mb-3">
+          <label class="form-label fw-bold">Product Category</label>
+          <div class="input-group">
+            <select class="form-select" id="categorySelect" name="category">
+              <option value="">Select Category</option>
+              {% for category in existing_categories %}
+              <option value="{{ category }}" {% if product and product.category == category %}selected{% endif %}>
+                {{ category }}
+              </option>
+              {% endfor %}
+            </select>
+            <button type="button" class="btn btn-outline-secondary" onclick="showNewCategory()">
+              <i class="fa fa-plus"></i> New
+            </button>
+          </div>
+          <input type="text" class="form-control mt-2" id="newCategoryInput" name="new_category" 
+                 placeholder="Or enter new category" style="display: none;">
+        </div>
+
+        <!-- Product Description -->
+        <div class="mb-3">
+          <label class="form-label fw-bold">Product Description</label>
+          <textarea class="form-control" name="description" placeholder="Enter product description" 
+                    rows="3">{% if product %}{{ product.description }}{% endif %}</textarea>
+        </div>
+
+        <!-- Existing Images (Edit Mode) -->
+        {% if product and product.prod_images.all %}
+        <div class="mb-3">
+          <label class="form-label fw-bold">Existing Images</label>
+          <div class="existing-images">
+            {% for image in product.prod_images.all %}
+              <div class="position-relative d-inline-block">
+                <img src="{{ image.image.url }}" class="image-preview" alt="Product Image">
+                <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0" 
+                        onclick="removeExistingImage({{ image.id }})" title="Remove Image">
+                  <i class="fa fa-times"></i>
+                </button>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Product Images - Multiple Upload -->
+        <div class="mb-3">
+          <label class="form-label fw-bold">Product Images</label>
+          <div id="imageUploads">
+            <div class="image-upload-group mb-2">
+              <input type="file" class="form-control" name="images" accept="image/*">
+              <div class="image-preview-container mt-2"></div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="addMoreImages()">
+            <i class="fa fa-plus me-1"></i>Add More Images
+          </button>
+          <small class="form-text text-muted">You can add multiple images (max 7 images)</small>
+        </div>
+
+        <!-- Available/Not Available Toggle -->
+        <div class="mb-3 form-check form-switch">
+          <input class="form-check-input" type="checkbox" name="available" id="availableSwitch" 
+                 {% if product and product.available or not product %}checked{% endif %}>
+          <label class="form-check-label fw-bold" for="availableSwitch">
+            Product Available for Sale
+          </label>
+        </div>
+
+        <div class="d-flex justify-content-between">
+          <button type="submit" class="btn btn-success px-4 fw-bold">
+            <i class="fa fa-save me-2"></i>Save Product
+          </button>
+          <a href="{% url 'profile' %}" class="btn btn-secondary px-4 fw-bold">
+            <i class="fa fa-arrow-left me-2"></i>Back
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+// Category Selection Functions
+function showNewCategory() {
+    const categorySelect = document.getElementById('categorySelect');
+    const newCategoryInput = document.getElementById('newCategoryInput');
+    
+    categorySelect.value = '';
+    newCategoryInput.style.display = 'block';
+    newCategoryInput.focus();
+}
+
+// Multiple Images Upload Functions
+let imageCount = 1;
+
+function addMoreImages() {
+    if (imageCount >= 7) {
+        alert('Maximum 7 images allowed');
+        return;
+    }
+    
+    const imageUploads = document.getElementById('imageUploads');
+    const newImageGroup = document.createElement('div');
+    newImageGroup.className = 'image-upload-group mb-2';
+    newImageGroup.innerHTML = `
+        <div class="d-flex align-items-center">
+            <input type="file" class="form-control" name="images" accept="image/*">
+            <button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeImageField(this)">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+        <div class="image-preview-container mt-2"></div>
+    `;
+    imageUploads.appendChild(newImageGroup);
+    imageCount++;
+}
+
+function removeImageField(button) {
+    button.closest('.image-upload-group').remove();
+    imageCount--;
+}
+
+// Image Preview Function
+function handleImagePreview(input) {
+    const previewContainer = input.parentElement.nextElementSibling;
+    previewContainer.innerHTML = '';
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.className = 'image-preview';
+            previewContainer.appendChild(img);
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Remove Existing Image (AJAX call)
+function removeExistingImage(imageId) {
+    if (confirm('Are you sure you want to remove this image?')) {
+        fetch(`/remove-product-image/${imageId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error removing image');
+            }
+        });
+    }
+}
+
+// Add event listeners for image preview
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('imageUploads').addEventListener('change', function(e) {
+        if (e.target.type === 'file') {
+            handleImagePreview(e.target);
+        }
+    });
+});
+
+// Form validation
+document.getElementById('productForm').addEventListener('submit', function(e) {
+    const categorySelect = document.getElementById('categorySelect');
+    const newCategoryInput = document.getElementById('newCategoryInput');
+    
+    if (!categorySelect.value && !newCategoryInput.value) {
+        e.preventDefault();
+        alert('Please select or enter a category');
+        return false;
+    }
+});
+</script>
+
+{% endblock %}

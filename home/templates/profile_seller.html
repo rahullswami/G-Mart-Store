@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Seller Profile{% endblock %}
+{% load static %}
+{% block content %}
+<style>
+.text-gradient {
+    background: linear-gradient(45deg,#ff416c,#ff4b2b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.card-img-top {
+    transition: transform 0.3s;
+    box-shadow: 0 4px 24px rgba(60,0,100,0.10);
+}
+.card:hover .card-img-top {
+    transform: scale(1.07);
+    box-shadow: 0 8px 32px rgba(60,0,100,0.18);
+}
+.bg-gradient {
+    background: linear-gradient(45deg,#ff416c,#ff4b2b)!important;
+}
+.price-badge {
+    font-size: 1.1rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 8px rgba(255,65,108,0.15);
+}
+.card-footer {
+    background: none;
+    border-top: none;
+}
+.brand-logo {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid #ff416c;
+    box-shadow: 0 2px 8px rgba(255,65,108,0.15);
+}
+.product-logo-overlay {
+    position: absolute;
+    left: 12px;
+    bottom: 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(60,0,100,0.10);
+    object-fit: cover;
+    z-index: 2;
+}
+</style>
+
+<div class="container mt-4">
+    <!-- Seller Profile Section -->
+    <div class="d-flex align-items-center mb-3">
+        {% if seller.brand_image %}
+            <img src="{{ seller.brand_image.url }}" alt="Brand Logo" class="brand-logo me-3">
+        {% else %}
+            <img src="{% static 'default_brand.png' %}" alt="No Logo" class="brand-logo me-3">
+        {% endif %}
+        <div>
+            <h2 class="fw-bold text-gradient mb-0">{{ seller.user.get_full_name|default:seller.user.username }}</h2>
+            <div class="text-secondary">{{ seller.store_name }}</div>
+        </div>
+        <span class="badge bg-success ms-3 fs-6 py-2 px-3">Seller</span>
+        <a href="{% url 'edit_seller_profile' %}" class="btn btn-outline-primary ms-3 fw-bold">
+            <i class="fa fa-edit me-1"></i> Edit Profile
+        </a>
+    </div>
+    <a href="{% url 'add_product' %}" class="btn btn-primary mb-4 fw-bold shadow-sm px-4 py-2">
+        <i class="fa fa-plus me-2"></i> Add New Product
+    </a>
+    <hr>
+    <h3 class="mb-4 fw-bold text-gradient">Your Products</h3>
+    <div class="row g-4">
+      {% for p in products %}
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex">
+          <div class="card border-0 shadow h-100 rounded-4 w-100 position-relative overflow-hidden">
+            <div style="position:relative;">
+              {% if p.prod_images.all %}
+                <img src="{{ p.prod_images.first.image.url }}" class="card-img-top rounded-top-4" alt="{{ p.name }}" style="height:180px;object-fit:cover;">
+              {% else %}
+                <img src="{% static 'default.jpg' %}" class="card-img-top rounded-top-4" alt="No Image" style="height:180px;object-fit:cover;">
+              {% endif %}
+              <!-- Seller logo overlay on product image -->
+              {% if seller.brand_image %}
+                <img src="{{ seller.brand_image.url }}" class="product-logo-overlay" alt="Seller Logo">
+              {% else %}
+                <img src="{% static 'default_brand.png' %}" class="product-logo-overlay" alt="Seller Logo">
+              {% endif %}
+            </div>
+            <div class="card-body d-flex flex-column justify-content-between pb-0">
+              <h5 class="card-title fw-bold text-truncate mb-2">{{ p.name }}</h5>
+              <span class="badge bg-gradient text-white price-badge px-3 py-2 mb-2">
+                ₹{{ p.price }}
+              </span>
+              <p class="card-text small text-muted mb-2">{{ p.description|truncatewords:15 }}</p>
+            </div>
+            <div class="card-footer d-flex justify-content-between align-items-center pt-0">
+                <a href="{% url 'edit_product' p.id %}" class="btn btn-warning btn-sm fw-bold shadow-sm" title="Edit">
+                    <i class="fa fa-edit"></i>
+                </a>
+                <a href="{% url 'delete_product' p.id %}" class="btn btn-danger btn-sm fw-bold shadow-sm" title="Delete">
+                    <i class="fa fa-trash"></i>
+                </a>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="col-12">
+          <p class="text-center text-danger fs-5">No products yet. Add your first one!</p>
+        </div>
+      {% endfor %}
+    </div>
+</div>
+{% endblock %}

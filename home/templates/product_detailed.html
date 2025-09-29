@@ -1,0 +1,817 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} - G-Mart{% endblock %}
+{% load static %}
+{% block content %}
+<style>
+    :root {
+        --primary-color: #2c7744;
+        --primary-dark: #1e5c33;
+        --accent-color: #ff6b35;
+        --text-dark: #333;
+        --text-light: #6c757d;
+        --border-color: #dee2e6;
+        --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+
+
+    .product-detail-container {
+        min-height: 100vh;
+        padding: 40px 20px;
+    }
+
+    .product-detail-card {
+        max-width: 1200px;
+        margin: 0 auto;
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        background: linear-gradient(135deg, var(--dark-bg), #164988);
+        color: #fff;
+        overflow: hidden;
+    }
+
+    .product-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+        color: white;
+        padding: 20px 30px;
+    }
+
+    .product-body {
+        padding: 30px;
+    }
+
+    /* Image Gallery Styles */
+    .main-image-container {
+        position: relative;
+        border-radius: 15px;
+        overflow: hidden;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .main-image {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+        cursor: zoom-in;
+        transition: transform 0.3s ease;
+    }
+
+    .thumbnail-gallery {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .thumbnail {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .thumbnail:hover,
+    .thumbnail.active {
+        border-color: var(--primary-color);
+        transform: scale(1.05);
+    }
+
+    /* Image Modal */
+    .image-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        padding-top: 50px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+    }
+
+    .modal-content {
+        margin: auto;
+        display: block;
+        max-width: 90%;
+        max-height: 80vh;
+        border-radius: 10px;
+    }
+
+    .close-modal {
+        position: absolute;
+        top: 15px;
+        right: 35px;
+        color: #f1f1f1;
+        font-size: 40px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    /* Product Info Styles */
+    .product-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 10px;
+    }
+
+    .product-price {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+    }
+
+    .rating-section {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .rating-stars {
+        color: #ffb400;
+        font-size: 1.2rem;
+        margin-right: 10px;
+    }
+
+    .rating-text {
+        color: var(--text-light);
+        font-size: 14px;
+    }
+
+    .product-description {
+        line-height: 1.6;
+        color: var(--text-dark);
+        margin-bottom: 25px;
+    }
+
+    .seller-info {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .seller-name {
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    .stock-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .stock-in {
+        background: #d4edda;
+        color: var(--primary-color);
+    }
+
+    .stock-out {
+        background: #f8d7da;
+        color: #dc3545;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        margin: 25px 0;
+    }
+
+    .btn-custom {
+        padding: 12px 25px;
+        border-radius: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-primary-custom {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+        color: white;
+    }
+
+    .btn-danger-custom {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+    }
+
+    .btn-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-custom i {
+        margin-right: 8px;
+    }
+
+    /* Share Section */
+    .share-section {
+        margin: 20px 0;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 10px;
+    }
+
+    .share-title {
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: var(--text-dark);
+    }
+
+    .share-icons a {
+        margin-right: 15px;
+        font-size: 20px;
+        transition: transform 0.3s ease;
+    }
+
+    .share-icons a:hover {
+        transform: scale(1.2);
+    }
+
+    /* Reviews Section */
+    .reviews-section {
+        margin-top: 40px;
+        padding-top: 30px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .section-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+    }
+
+    .section-title i {
+        margin-right: 10px;
+        color: var(--primary-color);
+    }
+
+    .review-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border-color);
+    }
+
+    .review-header {
+        display: flex;
+        justify-content: between;
+        align-items: flex-start;
+        margin-bottom: 10px;
+    }
+
+    .review-user {
+        display: flex;
+        align-items: center;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 10px;
+    }
+
+    .user-info h6 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .review-date {
+        color: var(--text-light);
+        font-size: 12px;
+    }
+
+    .review-images {
+        display: flex;
+        gap: 10px;
+        margin: 10px 0;
+        flex-wrap: wrap;
+    }
+
+    .review-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .review-image:hover {
+        transform: scale(1.05);
+    }
+
+    /* Review Form */
+    .review-form-container {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 15px;
+        margin-top: 30px;
+    }
+
+    .rating-input {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 15px;
+    }
+
+    .rating-star {
+        font-size: 24px;
+        color: #ddd;
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+
+    .rating-star:hover,
+    .rating-star.active {
+        color: #ffb400;
+    }
+
+    .file-upload-container {
+        border: 2px dashed var(--border-color);
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .file-upload-container:hover {
+        border-color: var(--primary-color);
+        background: rgba(44, 119, 68, 0.05);
+    }
+
+    .file-input {
+        display: none;
+    }
+
+    .file-name {
+        margin-top: 10px;
+        font-size: 14px;
+        color: var(--text-light);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .product-body {
+            padding: 20px;
+        }
+
+        .main-image {
+            height: 300px;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn-custom {
+            width: 100%;
+        }
+
+        .thumbnail {
+            width: 60px;
+            height: 60px;
+        }
+    }
+</style>
+
+<div class="product-detail-container">
+    <div class="product-detail-card">
+
+        <div class="product-body">
+            <div class="row g-4">
+                <!-- Left Column: Image Gallery -->
+                <div class="col-lg-6">
+                    <div class="main-image-container">
+                        {% if product.prod_images.all %}
+                        <img src="{{ product.prod_images.first.image.url }}" class="main-image" id="main-product-image"
+                            alt="{{ product.name }}">
+                        {% else %}
+                        <img src="{% static 'images/default-product.png' %}" class="main-image" id="main-product-image"
+                            alt="No Image Available">
+                        {% endif %}
+                    </div>
+
+                    <!-- Thumbnail Gallery -->
+                    <div class="thumbnail-gallery">
+                        {% for img in product.prod_images.all %}
+                        <img src="{{ img.image.url }}" class="thumbnail {% if forloop.first %}active{% endif %}"
+                            data-full-image="{{ img.image.url }}" alt="Product Image {{ forloop.counter }}">
+                        {% endfor %}
+                    </div>
+
+                    <!-- Seller Brand -->
+                    <div class="text-center mt-4">
+                        {% if product.seller.brand_image %}
+                        <img src="{{ product.seller.brand_image.url }}" class="brand-logo"
+                            alt="{{ product.seller.store_name }}"
+                            style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; border: 2px solid var(--primary-color);">
+                        {% endif %}
+                        <p class="mt-2 mb-0 text-white"><strong>{{ product.seller.store_name }}</strong></p>
+                    </div>
+                </div>
+
+                <!-- Right Column: Product Details -->
+                <div class="col-lg-6">
+                    <h1 class="product-title text-white">{{ product.name }}</h1>
+
+                    <!-- Rating -->
+                    <div class="rating-section text-white">
+                        <div class="rating-stars">
+                            {% with avg_rating=product.average_rating %}
+                            {% for i in "12345" %}
+                            <i class="fas fa-star{% if forloop.counter > avg_rating %}-half-alt{% endif %}"></i>
+                            {% endfor %}
+                            {% endwith %}
+                        </div>
+                        <span class="rating-text">
+                            {{ product.average_rating|floatformat:1 }} · {{ product.reviews.count }} reviews
+                        </span>
+                    </div>
+
+                    <!-- Price -->
+                    <div class="product-price">₹{{ product.price }}</div>
+
+                    <!-- Description -->
+                    <div class="product-description text-white">
+                        {{ product.description|linebreaks }}
+                    </div>
+
+                    <!-- Product Details -->
+                    <div class="product-details mb-4">
+                        <div class="row">
+                            <div class="col-6">
+                                <strong>Category:</strong>
+                                <span class="text-white">{{ product.category }}</span>
+                            </div>
+                            <div class="col-6">
+                                <strong>Brand:</strong>
+                                <span class="text-white">{{ product.seller.store_name }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Stock Status -->
+                    <div class="mb-4">
+                        {% if product.stock > 0 %}
+                        <span class="stock-badge stock-in">
+                            <i class="fas fa-check-circle me-1"></i>
+                            In Stock ({{ product.stock }} available)
+                        </span>
+                        {% else %}
+                        <span class="stock-badge stock-out">
+                            <i class="fas fa-times-circle me-1"></i>
+                            Out of Stock
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Seller Info -->
+                    <div class="seller-info">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-store text-success me-2"></i>
+                                <span class="seller-name">{{ product.seller.store_name }}</span>
+                                <br>
+                                <small class="text-white">Member since {{ product.seller.created_at|date:"Y" }}</small>
+                            </div>
+                            <a href="" class="btn btn-sm btn-outline-primary">
+                                View Store
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Delivery Info -->
+                    <div class="delivery-info mb-4">
+                        <i class="fas fa-truck text-primary me-2"></i>
+                        <strong>Free Delivery</strong> on orders above ₹500<br>
+                        <small class="text-white">Estimated delivery: 3-5 business days</small>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        {% if product.stock > 0 %}
+                        <a href="{% url 'add_to_cart' product.id %}" class="btn-custom btn-primary-custom flex-fill">
+                            <i class="fas fa-cart-plus"></i> Add to Cart
+                        </a>
+                        <a href="" class="btn-custom btn-danger-custom flex-fill">
+                            <i class="fas fa-bolt"></i> Buy Now
+                        </a>
+                        {% else %}
+                        <button class="btn-custom btn-secondary flex-fill" disabled>
+                            <i class="fas fa-bell"></i> Notify When Available
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <!-- Share Section -->
+                    <div class="share-section">
+                        <div class="share-title">Share this product:</div>
+                        <div class="share-icons">
+                            <a href="https://wa.me/?text=Check out {{ product.name }} on G-Mart: {{ request.build_absolute_uri }}"
+                                target="_blank" class="text-success">
+                                <i class="fab fa-whatsapp"></i>
+                            </a>
+                            <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}"
+                                target="_blank" class="text-primary">
+                                <i class="fab fa-facebook"></i>
+                            </a>
+                            <a href="https://twitter.com/intent/tweet?url={{ request.build_absolute_uri }}&text=Check out {{ product.name }}"
+                                target="_blank" class="text-info">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="mailto:?subject=Check out {{ product.name }}&body=Check out this product: {{ request.build_absolute_uri }}"
+                                class="text-danger">
+                                <i class="fas fa-envelope"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reviews Section -->
+            <div class="reviews-section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="section-title">
+                        <i class="fas fa-comments "></i><span class="text-white"> Customer Reviews</span>
+                        <span class="badge bg-primary ms-2 text-white">{{ product.reviews.count }}</span>
+                    </h3>
+
+                    <button class="btn btn-secondary" data-bs-target="#exampleModalToggle" data-bs-toggle="modal">+
+                        Write Your Review</button>
+
+
+                </div>
+
+                <!-- Reviews List -->
+                <div class="reviews-list">
+                    {% for review in product.reviews.all %}
+                    <div class="review-card">
+                        <div class="review-header">
+                            <div class="review-user">
+                                {% if review.user.profile.avatar %}
+                                <!-- <img src="{{ review.user.profile.avatar.url }}" class="user-avatar" alt="{{ review.user.get_full_name }}"> -->
+                                {% else %}
+                                <!-- <img src="{% static 'images/default-avatar.png' %}" class="user-avatar" alt="User Avatar"> -->
+                                {% endif %}
+                                <div class="user-info">
+                                    <h6 class="mb-0 text-dark">{{ review.user.get_full_name|default:review.user.username }}</h6>
+                                    <div class="rating-stars small">
+                                        {% for i in "12345" %}
+                                        <i
+                                            class="fas fa-star{% if forloop.counter > review.rating %}-half-alt{% endif %}"></i>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="review-date text-dark">
+                                {{ review.created_at|timesince }} ago
+                            </div>
+                        </div>
+
+                        <p class="review-text mb-2 text-dark">{{ review.comment }}</p>
+
+                        {% if review.images.all %}
+                        <div class="review-images">
+                            {% for image in review.images.all %}
+                            <img src="{{ image.image.url }}" class="review-image" alt="Review Image">
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        {% if review.user == request.user %}
+                        <div class="review-actions mt-2">
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteReview({{ review.id }})">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-comment-slash fa-3x text-white mb-3"></i>
+                        <p class="text-white">No reviews yet. Be the first to review this product!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+
+                <!-- review form modules  -->
+                <div class="modal fade text-white" id="exampleModalToggle" aria-hidden="true"
+                    aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content" style="background-color: #164988;">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5" style="font-weight: bold; color: #fff;"
+                                    id="exampleModalToggleLabel">Write Your Review</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body" style="background-color: #164988;">
+                                <!-- Add Review Form -->
+                                {% if user.is_authenticated %}
+                                <div class="review-form-container" style="background-color: #164988;">
+                                    <h5 class="mb-3 text-white">Write Your Review</h5>
+                                    <form method="post" action="{% url 'add_review' product.id %}"
+                                        enctype="multipart/form-data" id="review-form">
+                                        {% csrf_token %}
+
+                                        <!-- Rating -->
+                                        <div class="mb-3">
+                                            <label class="form-label text-white">Your Rating</label>
+                                            <div class="rating-input">
+                                                {% for i in "12345" %}
+                                                <span class="rating-star" data-rating="{{ forloop.counter }}">
+                                                    <i class="fas fa-star"></i>
+                                                </span>
+                                                {% endfor %}
+                                            </div>
+                                            <input type="hidden" name="rating" id="rating-value" required>
+                                        </div>
+
+                                        <!-- Review Text -->
+                                        <div class="mb-3">
+                                            <label for="comment" class="form-label text-white">Your Review</label>
+                                            <textarea name="comment" id="comment" class="form-control" rows="4"
+                                                placeholder="Share your experience with this product..."
+                                                required></textarea>
+                                        </div>
+
+                                        <!-- Review Images -->
+                                        <div class="mb-3">
+                                            <label class="form-label text-white">Add Photos (Optional)</label>
+                                            <div class="file-upload-container" id="review-images-container">
+                                                <i class="fas fa-cloud-upload-alt fa-2x text-white mb-2"></i>
+                                                <p>Click to upload product photos</p>
+                                                <p class="form-text">You can upload up to 4 images (JPEG, PNG, Max 5MB
+                                                    each)</p>
+                                                <input type="file" class="file-input" id="review-images"
+                                                    name="review_images" multiple accept="image/*">
+                                                <div class="file-name" id="review-images-name"></div>
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-primary btn-custom">
+                                            <i class="fas fa-paper-plane"></i> Submit Review
+                                        </button>
+                                    </form>
+                                </div>
+                                {% else %}
+                                <div class="alert alert-info text-center">
+                                    <i class="fas fa-info-circle"></i>
+                                    Please <a href="{% url 'login' %}?next={{ request.path }}"
+                                        class="alert-link">login</a> to write a review.
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<!-- Image Modal -->
+<div id="imageModal" class="image-modal">
+    <span class="close-modal">&times;</span>
+    <img class="modal-content" id="modalImage">
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Image Gallery Functionality
+        const mainImage = document.getElementById('main-product-image');
+        const thumbnails = document.querySelectorAll('.thumbnail');
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        const closeModal = document.querySelector('.close-modal');
+
+        // Thumbnail click handler
+        thumbnails.forEach(thumb => {
+            thumb.addEventListener('click', function () {
+                const fullImage = this.getAttribute('data-full-image');
+                mainImage.src = fullImage;
+
+                // Update active thumbnail
+                thumbnails.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Main image click to open modal
+        mainImage.addEventListener('click', function () {
+            modal.style.display = 'block';
+            modalImg.src = this.src;
+        });
+
+        // Close modal
+        closeModal.addEventListener('click', function () {
+            modal.style.display = 'none';
+        });
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Rating System
+        const ratingStars = document.querySelectorAll('.rating-star');
+        const ratingValue = document.getElementById('rating-value');
+
+        ratingStars.forEach(star => {
+            star.addEventListener('click', function () {
+                const rating = this.getAttribute('data-rating');
+                ratingValue.value = rating;
+
+                // Update star display
+                ratingStars.forEach((s, index) => {
+                    if (index < rating) {
+                        s.classList.add('active');
+                    } else {
+                        s.classList.remove('active');
+                    }
+                });
+            });
+        });
+
+        // File upload display
+        const fileInput = document.getElementById('review-images');
+        const fileName = document.getElementById('review-images-name');
+        const fileContainer = document.getElementById('review-images-container');
+
+        fileContainer.addEventListener('click', function () {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', function () {
+            if (fileInput.files.length > 0) {
+                const names = Array.from(fileInput.files).map(file => file.name).join(', ');
+                fileName.textContent = `${fileInput.files.length} file(s) selected: ${names}`;
+            } else {
+                fileName.textContent = '';
+            }
+        });
+
+        // Form validation
+        const reviewForm = document.getElementById('review-form');
+        reviewForm.addEventListener('submit', function (e) {
+            if (!ratingValue.value) {
+                e.preventDefault();
+                alert('Please select a rating');
+                return false;
+            }
+        });
+    });
+
+    function deleteReview(reviewId) {
+        if (confirm('Are you sure you want to delete this review?')) {
+            fetch(`/reviews/${reviewId}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error deleting review');
+                    }
+                });
+        }
+    }
+</script>
+{% endblock %}

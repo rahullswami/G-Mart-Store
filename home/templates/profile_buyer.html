@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Buyer Profile{% endblock %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-4">
+    <h2>Welcome, {{ user.first_name }} (Buyer)</h2>
+<p><strong>Email:</strong> {{ buyer.username }}</p>
+<p><strong>Joined:</strong> {{ buyer.date_joined }}</p>
+<hr>
+<p>You are a buyer. You cannot add or edit products.</p>
+</div>
+
+{% endblock %}

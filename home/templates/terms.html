@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Terms & Conditions{% endblock %}
+{% block content %}
+
+<div class="container mt-4">
+  <h1 class="mb-3">Terms & Conditions for Sellers</h1>
+  <p>Welcome to <strong>G-Mart</strong>. By registering as a seller on our platform, you agree to the following Terms & Conditions. Please read carefully before proceeding.</p>
+
+  <h3>1. Seller Account Registration</h3>
+  <ul>
+    <li>You must provide accurate and complete information during registration.</li>
+    <li>Your email address must be valid and unique.</li>
+    <li>Providing false or misleading information may result in termination of your seller account.</li>
+  </ul>
+
+  <h3>2. Product Listings</h3>
+  <ul>
+    <li>All products listed must be legal and comply with applicable laws of India.</li>
+    <li>Counterfeit, restricted, or prohibited items (e.g., drugs, weapons, pirated goods) are strictly banned.</li>
+    <li>You must provide correct product descriptions, images, and prices.</li>
+  </ul>
+
+  <h3>3. Order Fulfillment</h3>
+  <ul>
+    <li>You are responsible for timely processing, packaging, and shipping of customer orders.</li>
+    <li>Delays or failure to fulfill orders may affect your seller rating and lead to penalties.</li>
+  </ul>
+
+  <h3>4. Payments</h3>
+  <ul>
+    <li>Payments will be transferred to your registered bank account after deducting platform fees and applicable taxes.</li>
+    <li>You must ensure bank details and tax information are correct.</li>
+  </ul>
+
+  <h3>5. Fees & Charges</h3>
+  <ul>
+    <li>G-Mart may charge commission, transaction fees, or other charges as per policy.</li>
+    <li>Fee structure may change with prior notice.</li>
+  </ul>
+
+  <h3>6. Returns & Refunds</h3>
+  <ul>
+    <li>You must accept returns and issue refunds in accordance with G-Mart’s return policy.</li>
+    <li>Failure to comply with return/refund rules may lead to account suspension.</li>
+  </ul>
+
+  <h3>7. Compliance with Laws</h3>
+  <ul>
+    <li>You are solely responsible for complying with GST, Income Tax, and any other applicable regulations.</li>
+    <li>Any legal disputes arising from your business activities will be your responsibility.</li>
+  </ul>
+
+  <h3>8. Termination of Account</h3>
+  <ul>
+    <li>Violation of these Terms may lead to suspension or permanent removal of your seller account.</li>
+    <li>Repeated customer complaints may also result in account termination.</li>
+  </ul>
+
+  <h3>9. Intellectual Property</h3>
+  <ul>
+    <li>You must not use copyrighted or trademarked content without permission.</li>
+    <li>Infringing listings may be removed without notice.</li>
+  </ul>
+
+  <h3>10. Limitation of Liability</h3>
+  <p>G-Mart acts only as a marketplace platform. We are not responsible for disputes between sellers and buyers, product quality issues, or third-party claims.</p>
+
+  <h3>11. Updates to Terms</h3>
+  <p>We may revise these Terms at any time. Continued use of the seller account means you agree to updated terms.</p>
+
+  <div class="mt-4">
+    <p>By registering as a seller, you confirm that you have read and agreed to these Terms & Conditions.</p>
+    <a href="{% url 'seller_registration' %}" class="btn btn-primary">Agree & Register as Seller</a>
+  </div>
+</div>
+
+{% endblock %}

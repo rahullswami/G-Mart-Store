@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container my-5">
+    <h2 class="text-center mb-5 fw-bold text-gradient">Checkout</h2>
+    <table class="table table-bordered table-hover">
+        <thead class="bg-danger text-white">
+            <tr>
+                <th>Product Name</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td class="align-middle">{{ item.product.name }}</td>
+                <td class="align-middle">{{ item.quantity }}</td>
+                <td class="align-middle">₹{{ item.product.price }}</td>
+                <td class="align-middle">₹{{ item.total_price }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="text-end mt-4">
+        <h4 id="checkout-total" class="fw-bold">Grand Total: ₹{{ total }}</h4>
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success btn-lg mt-3">Confirm Order</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

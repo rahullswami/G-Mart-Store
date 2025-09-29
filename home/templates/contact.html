@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+{% block title %}Contact Us - G-Mart{% endblock %}
+{% load static %}
+
+{% block content %}
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .contact-container {
+        color: #333;
+        line-height: 1.6;
+        min-height: calc(100vh - 120px);
+        padding: 40px 20px;
+    }
+    
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 1.2fr;
+        gap: 40px;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .contact-info {
+        background: linear-gradient(135deg, #2c7744 0%, #28a745 100%);
+        color: white;
+        padding: 50px 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .contact-info h2 {
+        font-size: 32px;
+        margin-bottom: 30px;
+        position: relative;
+        padding-bottom: 15px;
+    }
+    
+    .contact-info h2:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 60px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 2px;
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 25px;
+    }
+    
+    .info-icon {
+        background: rgba(255, 255, 255, 0.2);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+    
+    .info-text h3 {
+        font-size: 18px;
+        margin-bottom: 5px;
+    }
+    
+    .info-text p {
+        opacity: 0.9;
+    }
+    
+    .map-container {
+        margin-top: 30px;
+        border-radius: 10px;
+        overflow: hidden;
+        height: 200px;
+        background: #e9f5ec;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #2c7744;
+        font-weight: 500;
+    }
+    
+    .contact-form {
+        padding: 50px 40px;
+        background: #fff;
+    }
+    
+    .contact-form h2 {
+        font-size: 32px;
+        margin-bottom: 10px;
+        color: #2c7744;
+    }
+    
+    .form-subtitle {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 16px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #444;
+    }
+    
+    input, textarea {
+        width: 100%;
+        padding: 15px;
+        border: 1px solid #e1e5eb;
+        border-radius: 10px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+    }
+    
+    input:focus, textarea:focus {
+        outline: none;
+        border-color: #28a745;
+        box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2);
+    }
+    
+    textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+    
+    .submit-btn {
+        background: linear-gradient(135deg, #2c7744 0%, #28a745 100%);
+        color: white;
+        border: none;
+        padding: 16px 30px;
+        font-size: 18px;
+        font-weight: 600;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    .submit-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+    }
+    
+    .submit-btn i {
+        margin-left: 10px;
+    }
+    
+    .social-links {
+        display: flex;
+        justify-content: center;
+        margin-top: 30px;
+    }
+    
+    .social-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 10px;
+        color: #2c7744;
+        transition: all 0.3s ease;
+    }
+    
+    .social-icon:hover {
+        background: #2c7744;
+        color: white;
+        transform: translateY(-3px);
+    }
+    
+    /* Success message styling */
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        font-weight: 500;
+        text-align: center;
+    }
+    
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    /* Form error styling */
+    .errorlist {
+        color: #dc3545;
+        margin-top: 5px;
+        padding-left: 20px;
+        font-size: 14px;
+    }
+    
+    @media (max-width: 992px) {
+        .container {
+            grid-template-columns: 1fr;
+            max-width: 700px;
+        }
+        
+        .contact-info {
+            padding: 40px 30px;
+        }
+        
+        .contact-form {
+            padding: 40px 30px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .contact-container {
+            padding: 20px 15px;
+        }
+        
+        .container {
+            margin: 0 auto;
+        }
+        
+        .contact-info, .contact-form {
+            padding: 30px 20px;
+        }
+        
+        .contact-info h2, .contact-form h2 {
+            font-size: 26px;
+        }
+    }
+</style>
+
+<div class="contact-container">
+    <div class="container">
+        <!-- Left side: Contact info -->
+        <div class="contact-info">
+            <h2>Contact Information</h2>
+            
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div class="info-text">
+                    <h3>Our Location</h3>
+                    <p>Alwar, Rajasthan, India</p>
+                </div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="fas fa-phone-alt"></i>
+                </div>
+                <div class="info-text">
+                    <h3>Phone Number</h3>
+                    <p>+91 7877862288</p>
+                </div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="info-text">
+                    <h3>Email Address</h3>
+                    <p>gmart.support@gmail.com</p>
+                </div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="info-text">
+                    <h3>Working Hours</h3>
+                    <p>Monday - Saturday, 9:00 AM - 7:00 PM</p>
+                </div>
+            </div>
+            
+            <div class="map-container">
+                <i class="fas fa-map-marked-alt" style="font-size: 24px; margin-right: 10px;"></i>
+                <span>View on Google Maps</span>
+            </div>
+        </div>
+
+        <!-- Right side: Contact form -->
+        <div class="contact-form">
+            <h2>Get in Touch</h2>
+            <p class="form-subtitle">We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+            
+            <!-- Django Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="name">Your Name</label>
+                    <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Your Email</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email address" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="subject">Subject</label>
+                    <input type="text" id="subject" name="subject" placeholder="What is this regarding?" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="message">Your Message</label>
+                    <textarea id="message" name="message" placeholder="Please type your message here..." required></textarea>
+                </div>
+                
+                <button type="submit" class="submit-btn">
+                    Send Message <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+            
+            <div class="social-links">
+                <a href="#" class="social-icon">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="#" class="social-icon">
+                    <i class="fab fa-twitter"></i>
+                </a>
+                <a href="#" class="social-icon">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="#" class="social-icon">
+                    <i class="fab fa-linkedin-in"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Font Awesome for icons -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+{% endblock %}

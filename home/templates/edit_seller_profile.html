@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Edit Seller Profile{% endblock %}
+{% load static %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="fw-bold text-gradient mb-4">Edit Your Brand Profile</h2>
+    <form method="POST" enctype="multipart/form-data" class="p-4 rounded shadow" style="max-width:400px;margin:auto;background:#fff;">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success px-4 fw-bold">
+            <i class="fa fa-save me-2"></i>Save
+        </button>
+        <a href="{% url 'profile' %}" class="btn btn-secondary px-4 fw-bold ms-2">
+            <i class="fa fa-arrow-left me-2"></i>Back
+        </a>
+    </form>
+</div>
+{% endblock %}
