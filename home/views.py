@@ -16,6 +16,69 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.views.decorators.http import require_POST
 from .forms import ReviewForm
+from django.core.mail import send_mail
+from django.conf import settings
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+
+def send_order_emails(order, buyer_email, seller_email):
+    try:
+        # Buyer ke liye email
+        buyer_subject = f'G-Mart Order Confirmation - Order #{order.id}'
+        buyer_message = f'''
+        Hello Customer,
+        
+        Thank you for your order!
+        Order ID: {order.id}
+        Total Amount: ₹{order.total_amount}
+        
+        We'll notify you once your order is shipped.
+        
+        Regards,
+        G-Mart Team
+        '''
+        
+        # Seller ke liye email
+        seller_subject = f'New Order Received - Order #{order.id}'
+        seller_message = f'''
+        New Order Alert!
+        
+        Order ID: {order.id}
+        Customer Email: {buyer_email}
+        Total Amount: ₹{order.total_amount}
+        
+        Please process this order promptly.
+        
+        Regards,
+        G-Mart System
+        '''
+        
+        # Buyer ko email bhejein
+        send_mail(
+            buyer_subject,
+            buyer_message,
+            settings.EMAIL_HOST_USER,
+            [buyer_email],
+            fail_silently=False,
+        )
+        
+        # Seller ko email bhejein
+        send_mail(
+            seller_subject,
+            seller_message,
+            settings.EMAIL_HOST_USER,
+            [seller_email],
+            fail_silently=False,
+        )
+        
+        return True
+        
+    except Exception as e:
+        print(f"Email sending error: {e}")
+        return False
+
+
+
 
 
 
@@ -163,40 +226,169 @@ def update_cart_item(request, item_id):
 
 @login_required
 def checkout_view(request):
-    cart, created = Cart.objects.get_or_create(user=request.user)
-    cart, items, total, cart_item_count = cart_show_pages(request)  # <-- assign values
-    items = cart.items.all()
-
+    # Cart get karo
+    cart = Cart.objects.get(user=request.user)
+    cart_items = CartItem.objects.filter(cart=cart)
+    total = sum(item.product.price * item.quantity for item in cart_items)
+    
     if request.method == "POST":
-        order = Order.objects.create(user=request.user)
+        # Form data lelo
+        full_name = request.POST.get("full_name")
+        email = request.POST.get("email")
+        phone = request.POST.get("phone")
+        address = request.POST.get("address")
+        payment_method = request.POST.get("payment_method", "cod")
 
-        for item in items:
-            OrderItem.objects.create(order=order, product=item.product, quantity=item.quantity)
+        # Step 1: BuyerProfile create karo
+        buyer_profile, created = BuyerProfile.objects.get_or_create(user=request.user)
+        buyer_profile.phone = phone
+        buyer_profile.address = address
+        buyer_profile.save()
 
-            # Seller email
-            seller_email = item.product.seller.user.email
-            send_mail(
-                subject="New Order Received - G-Mart",
-                message=f"You got an order!\nProduct: {item.product.name}\nQuantity: {item.quantity}\nBuyer: {request.user.username}",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[seller_email],
-                fail_silently=False,
-            )
-
-        # Buyer email
-        send_mail(
-            subject="Order Confirmation - G-Mart",
-            message=f"Hello {request.user.username},\nYour order #{order.id} has been placed successfully!",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[request.user.email],
-            fail_silently=False,
+        # Step 2: Order create karo
+        order = Order.objects.create(
+            buyer=buyer_profile,
+            payment_method=payment_method,
+            status="Pending"
         )
 
-        cart.items.all().delete()  # Clear cart
+        # Step 3: Order items add karo aur emails bhejo
+        for cart_item in cart_items:
+            # Order item create karo
+            OrderItem.objects.create(
+                order=order,
+                product=cart_item.product,
+                quantity=cart_item.quantity,
+                price=cart_item.product.price,
+            )
+
+            # ✅ SELLER KO EMAIL WITH PRODUCT LINK
+            try:
+                seller = cart_item.product.seller
+                seller_email = seller.user.email
+                
+                # Product URL generate karo
+                product_url = f"http://127.0.0.1:8000/product/{cart_item.product.id}/"
+                # Ya agar aapka domain hai toh: f"https://yourdomain.com/product/{cart_item.product.id}/"
+                
+                seller_subject = f"🛍️ New Order Received - Order #{order.id}"
+                seller_message = f"""
+Hello {seller.store_name},
+
+🎉 Congratulations! You have received a new order on G-Mart.
+
+📦 **ORDER DETAILS:**
+• Order ID: #{order.id}
+• Product: {cart_item.product.name}
+• Quantity: {cart_item.quantity}
+• Price: ₹{cart_item.product.price}
+• Product Link: {product_url}
+
+👤 **CUSTOMER DETAILS:**
+• Name: {full_name}
+• Email: {email}
+• Phone: {phone}
+• Address: {address}
+
+🔗 **QUICK ACTIONS:**
+• View Product: {product_url}
+• Manage Orders: http://127.0.0.1:8000/seller/dashboard/
+
+Please process this order within 24-48 hours.
+
+Thank you for selling with G-Mart!
+                """
+                
+                send_mail(
+                    subject=seller_subject,
+                    message=seller_message.strip(),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[seller_email],
+                    fail_silently=False,
+                )
+                print(f"✅ SELLER EMAIL SENT WITH PRODUCT LINK: {product_url}")
+                
+            except Exception as e:
+                print(f"❌ SELLER EMAIL FAILED: {e}")
+
+        # ✅ BUYER KO EMAIL WITH PRODUCT LINKS
+        try:
+            # Saare products ke links generate karo
+            product_links = ""
+            for cart_item in cart_items:
+                product_url = f"http://127.0.0.1:8000/product/{cart_item.product.id}/"
+                product_links += f"• {cart_item.product.name}: {product_url}\n"
+            
+            buyer_subject = f"✅ Order Confirmation - Order #{order.id}"
+            buyer_message = f"""
+Hello {full_name},
+
+Thank you for your order with G-Mart! We're excited to serve you.
+
+📦 **ORDER SUMMARY:**
+• Order ID: #{order.id}
+• Total Amount: ₹{total}
+• Payment Method: {payment_method.title()}
+• Order Date: {order.created_at.strftime("%d %b %Y, %I:%M %p")}
+
+🏠 **SHIPPING ADDRESS:**
+{address}
+
+🛍️ **YOUR PRODUCTS:**
+{product_links}
+
+📦 **WHAT'S NEXT?**
+1. We've notified the sellers about your order
+2. Sellers will process and ship your items
+3. You'll receive shipping updates via email
+
+🔗 **QUICK LINKS:**
+• Track Order: http://127.0.0.1:8000/order-history/
+• View Products: {product_links.split('•')[1].split(':')[1].strip() if product_links else "http://127.0.0.1:8000/"}
+• Contact Support: http://127.0.0.1:8000/contact/
+
+If you have any questions, please contact our support team.
+
+Thank you for shopping with G-Mart!
+
+Best regards,
+G-Mart Team
+            """
+            
+            send_mail(
+                subject=buyer_subject,
+                message=buyer_message.strip(),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                fail_silently=False,
+            )
+            print(f"✅ BUYER EMAIL SENT WITH PRODUCT LINKS")
+            
+        except Exception as e:
+            print(f"❌ BUYER EMAIL FAILED: {e}")
+
+        # Step 4: Cart clear karo
+        cart_items.delete()
+
+        messages.success(request, f"🎉 Order #{order.id} placed successfully! Confirmation emails with product links have been sent.")
         return redirect('order_success')
 
-    total = sum(item.product.price * item.quantity for item in items)
-    return render(request, 'checkout.html', {'items': items, 'total': total, 'cart': cart, 'cart_item_count': cart_item_count })
+    context = {
+        'items': cart_items,
+        'cart_items': cart_items,
+        'total': total,
+    }
+    return render(request, 'checkout.html', context)
+
+
+
+
+@login_required
+def order_success(request):
+    return render(request, 'order_success.html')
+
+
+
 
 
 @login_required(login_url='/accounts/login/')
@@ -822,3 +1014,5 @@ def edit_seller_profile(request):
     else:
         form = SellerProfileForm(instance=seller)
     return render(request, "edit_seller_profile.html", {"form": form, "seller": seller})
+
+

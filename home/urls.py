@@ -13,6 +13,7 @@ urlpatterns = [
     path('remove/<int:item_id>/', remove_from_cart, name='remove_from_cart'),
     path('update/<int:item_id>/', update_cart_item, name='update_cart_item'),
     path('checkout/', checkout_view, name='checkout'),
+    path('order-success/', order_success, name='order_success'),
 
     # order url 
     path('orders/', order_history, name='order_history'),

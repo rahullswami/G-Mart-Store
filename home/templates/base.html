@@ -461,7 +461,7 @@
                                     {% endif %}
                                 </div>
                                 
-                                <p class="mb-1 small text-white">{{ notification.message }}</p>
+                                <p class="mb-1 small text-white">{{ notification.message|truncatechars:40 }}</p>
                                 
                                 <!-- Product Info (if available) -->
                                 {% if notification.product %}
